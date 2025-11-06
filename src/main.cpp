@@ -16,11 +16,16 @@ void printUsage(const char* programName) {
     std::cout << "Solid Color Image Generator\n\n";
     std::cout << "Usage: " << programName << " [options]\n\n";
     std::cout << "Options:\n";
-    std::cout << "  -c, --color <color>      Color in hex format (e.g., #FF5733 or FF5733)\n";
+    std::cout << "  -c, --color <color>      Color in hex format:\n";
+    std::cout << "                           - #RGB (e.g., #F0A)\n";
+    std::cout << "                           - #RRGGBB (e.g., #FF5733)\n";
+    std::cout << "                           - #RRGGBBAA (e.g., #FF573380 for 50% opacity)\n";
+    std::cout << "                           Alpha: 00=transparent, FF=opaque\n";
     std::cout << "  -o, --output <file>      Output file path (extension determines format)\n";
     std::cout << "  -r, --resolution <WxH>   Resolution (e.g., 1920x1080)\n";
     std::cout << "  -a, --auto               Use screen resolution (default)\n";
     std::cout << "  -f, --format <format>    Output format (png, jpg, bmp)\n";
+    std::cout << "                           Note: JPEG does not support transparency\n";
     std::cout << "  -q, --quality <0-100>    JPEG quality (default: 95)\n";
     std::cout << "  -h, --help               Show this help message\n\n";
     std::cout << "Presets:\n";
@@ -32,6 +37,8 @@ void printUsage(const char* programName) {
     std::cout << "  " << programName << " -c #FF5733 -o output.png\n";
     std::cout << "  " << programName << " -c 3498DB --fullhd -o blue.jpg -q 90\n";
     std::cout << "  " << programName << " -c \"#00FF00\" -r 800x600 -o green.bmp\n";
+    std::cout << "  " << programName << " -c \"#FF573380\" -o semi-transparent.png\n";
+    std::cout << "  " << programName << " -c \"#0000FF40\" --fullhd -o blue-25-percent.png\n";
 }
 
 /**
@@ -190,7 +197,12 @@ int main(int argc, char* argv[]) {
         // Generate image
         std::cout << "Generating " << resolution.toString()
                   << " " << writer->getFormatName()
-                  << " image with color " << color.toHex() << "...\n";
+                  << " image with color " << color.toHex(!color.isOpaque()) << "...\n";
+
+        if (!color.isOpaque()) {
+            std::cout << "Note: Color has transparency (alpha = "
+                      << static_cast<int>(color.getAlpha()) << "/255)\n";
+        }
 
         bool success = writer->write(outputFile, color, resolution);
 
